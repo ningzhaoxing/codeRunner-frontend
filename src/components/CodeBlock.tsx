@@ -1,0 +1,178 @@
+"use client";
+
+import { useEffect, useMemo, useRef } from "react";
+import dynamic from "next/dynamic";
+import { usePostStore } from "@/store/usePostStore";
+import { executeCode } from "@/lib/api";
+import type { SSEEvent } from "@/lib/sse";
+import CodeBlockHeader from "./CodeBlockHeader";
+import OutputPanel from "./OutputPanel";
+
+// Monaco Editor only runs on the client. Load it dynamically with ssr: false.
+const Editor = dynamic(() => import("@monaco-editor/react").then((m) => m.default), {
+  ssr: false,
+  loading: () => (
+    <div className="bg-[#1e1e1e] text-text-secondary text-xs font-mono px-4 py-3">
+      Loading editor...
+    </div>
+  ),
+});
+
+interface CodeBlockProps {
+  blockId: string;
+  code: string;
+  language: string;
+}
+
+interface LangInfo {
+  filename: string;
+  monacoLang: string;
+  label: string;
+}
+
+function resolveLanguage(lang: string): LangInfo {
+  const normalized = lang.toLowerCase();
+  switch (normalized) {
+    case "go":
+    case "golang":
+      return { filename: "main.go", monacoLang: "go", label: "go" };
+    case "python":
+    case "py":
+      return { filename: "main.py", monacoLang: "python", label: "python" };
+    case "javascript":
+    case "js":
+      return { filename: "index.js", monacoLang: "javascript", label: "javascript" };
+    case "java":
+      return { filename: "Main.java", monacoLang: "java", label: "java" };
+    case "c":
+      return { filename: "main.c", monacoLang: "c", label: "c" };
+    default:
+      return { filename: `code.${normalized}`, monacoLang: normalized, label: normalized };
+  }
+}
+
+export default function CodeBlock({ blockId, code, language }: CodeBlockProps) {
+  const langInfo = useMemo(() => resolveLanguage(language), [language]);
+
+  const block = usePostStore((s) => s.codeBlocks[blockId]);
+  const initCodeBlock = usePostStore((s) => s.initCodeBlock);
+  const updateCode = usePostStore((s) => s.updateCode);
+  const setOutput = usePostStore((s) => s.setOutput);
+  const setRunning = usePostStore((s) => s.setRunning);
+  const setExpanded = usePostStore((s) => s.setExpanded);
+
+  const abortRef = useRef<AbortController | null>(null);
+
+  // Initialize the block on first mount (or when blockId changes) if not present.
+  useEffect(() => {
+    const current = usePostStore.getState().codeBlocks[blockId];
+    if (!current) {
+      initCodeBlock(blockId, code, language);
+    }
+  }, [blockId, code, language, initCodeBlock]);
+
+  // Cancel any in-flight execution on unmount.
+  useEffect(() => {
+    return () => {
+      abortRef.current?.abort();
+    };
+  }, []);
+
+  const currentCode = block?.code ?? code;
+  const isRunning = block?.isRunning ?? false;
+  const output = block?.output ?? null;
+  const runError = block?.runError ?? null;
+  const isExpanded = block?.isExpanded ?? false;
+
+  const lineCount = currentCode.split("\n").length;
+  const editorHeight = Math.max(80, Math.min(300, lineCount * 20 + 16));
+  const expandedHeight = Math.max(300, Math.min(600, lineCount * 20 + 16));
+
+  const handleRun = async () => {
+    if (isRunning) return;
+
+    setOutput(blockId, null, null);
+    setRunning(blockId, true);
+
+    const controller = new AbortController();
+    abortRef.current = controller;
+    const timeoutId = setTimeout(() => controller.abort(), 30000);
+
+    try {
+      await executeCode(
+        blockId,
+        langInfo.monacoLang,
+        currentCode,
+        (event: SSEEvent) => {
+          if (event.type === "result") {
+            const out = (event.output as string | null) ?? null;
+            const err = (event.error as string | null) ?? null;
+            setOutput(blockId, out, err);
+          } else if (event.type === "error") {
+            const msg = (event.message as string) ?? "执行出错";
+            setOutput(blockId, null, msg);
+          }
+        },
+        controller.signal
+      );
+    } catch (err) {
+      if (err instanceof Error && err.name === "AbortError") {
+        setOutput(blockId, null, "执行超时");
+      } else {
+        setOutput(blockId, null, "网络错误，请重试");
+      }
+    } finally {
+      clearTimeout(timeoutId);
+      setRunning(blockId, false);
+      abortRef.current = null;
+    }
+  };
+
+  const handleToggleAI = () => {
+    // AI panel toggle — wired in Task 7. For now, reuse the expanded flag.
+    setExpanded(blockId, !isExpanded);
+  };
+
+  const handleToggleExpand = () => {
+    setExpanded(blockId, !isExpanded);
+  };
+
+  const handleEditorChange = (value: string | undefined) => {
+    updateCode(blockId, value ?? "");
+  };
+
+  return (
+    <div className="my-4 border border-border rounded-lg overflow-hidden bg-surface-1">
+      <CodeBlockHeader
+        filename={langInfo.filename}
+        language={langInfo.label}
+        isRunning={isRunning}
+        isExpanded={isExpanded}
+        onRun={handleRun}
+        onToggleAI={handleToggleAI}
+        onToggleExpand={handleToggleExpand}
+      />
+      <div style={{ height: isExpanded ? expandedHeight : editorHeight }}>
+        <Editor
+          height="100%"
+          language={langInfo.monacoLang}
+          value={currentCode}
+          onChange={handleEditorChange}
+          theme="vs-dark"
+          options={{
+            minimap: { enabled: false },
+            scrollBeyondLastLine: false,
+            fontSize: 13,
+            lineHeight: 20,
+            padding: { top: 12 },
+            renderLineHighlight: "none",
+            overviewRulerLanes: 0,
+            hideCursorInOverviewRuler: true,
+            scrollbar: { vertical: "hidden", horizontal: "auto" },
+          }}
+        />
+      </div>
+      <OutputPanel output={output} error={runError} isRunning={isRunning} />
+    </div>
+  );
+}
