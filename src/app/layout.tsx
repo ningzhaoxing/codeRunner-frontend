@@ -1,0 +1,17 @@
+import type { Metadata } from "next";
+import "./globals.css";
+
+export const metadata: Metadata = {
+  title: "CodeRunner Blog",
+  description: "技术博客 - 代码可直接运行",
+};
+
+export default function RootLayout({ children }: { children: React.ReactNode }) {
+  return (
+    <html lang="zh-CN">
+      <body className="min-h-screen bg-surface-0 text-text-body">
+        {children}
+      </body>
+    </html>
+  );
+}
