@@ -14,6 +14,11 @@ export default function OutputPanel({ output, error, isRunning }: OutputPanelPro
       {isRunning && (
         <span className="text-text-secondary animate-pulse">执行中...</span>
       )}
+      {!isRunning && (output || error) && (
+        <div className="flex items-center justify-between mb-2">
+          <span className="text-text-disabled text-[10px] uppercase tracking-wider">Output</span>
+        </div>
+      )}
       {error && <pre className="text-error whitespace-pre-wrap">{error}</pre>}
       {output && !error && (
         <pre className="text-text-secondary whitespace-pre-wrap">{output}</pre>

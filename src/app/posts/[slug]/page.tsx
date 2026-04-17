@@ -20,9 +20,11 @@ export default async function PostPage({
     notFound();
   }
 
+  const readingTime = `${Math.ceil(article.content.split(/\s+/).length / 200)} min read`;
+
   return (
     <div className="max-w-[720px] mx-auto px-6 pt-14 pb-16">
-      <ArticleHeader article={article} />
+      <ArticleHeader article={article} readingTime={readingTime} />
       <MarkdownRenderer content={article.content} articleId={article.slug} articleContent={article.content} />
     </div>
   );

@@ -7,7 +7,7 @@ export default function Footer() {
         </span>
         <div className="flex items-center gap-4">
           <a
-            href="https://github.com"
+            href="https://github.com/ningzhaoxing/codeRunner-front"
             target="_blank"
             rel="noopener noreferrer"
             className="text-text-disabled text-xs hover:text-text-secondary transition-colors"

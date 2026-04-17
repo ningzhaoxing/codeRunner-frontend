@@ -28,3 +28,31 @@ body {
   font-size: 15px;
   line-height: 1.8;
 }
+
+html {
+  scroll-behavior: smooth;
+}
+
+::selection {
+  background-color: rgba(144, 232, 111, 0.25);
+  color: #e8e8f0;
+}
+
+/* Custom scrollbar for dark theme */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #2a2a4a;
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #3a3a5a;
+}

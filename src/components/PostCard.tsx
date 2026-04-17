@@ -3,7 +3,7 @@ import type { Article } from "@/types";
 
 export default function PostCard({ post }: { post: Article }) {
   return (
-    <article className="py-5 border-b border-border">
+    <article className="py-5 border-b border-border px-3 -mx-3 rounded-lg hover:bg-[#151530] transition-colors">
       <div className="flex items-start justify-between gap-4">
         <Link
           href={`/posts/${post.slug}`}

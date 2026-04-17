@@ -18,7 +18,7 @@ export default function Home() {
       {/* Post list */}
       <section className="pb-16">
         <h2 className="text-text-disabled text-xs font-medium uppercase tracking-wider mb-2">
-          Recent Posts
+          Recent Posts {posts.length > 0 && `(${posts.length})`}
         </h2>
         {posts.length === 0 ? (
           <p className="text-text-disabled text-sm py-8">暂无文章</p>
