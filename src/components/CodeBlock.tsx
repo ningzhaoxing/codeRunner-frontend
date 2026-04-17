@@ -21,6 +21,18 @@ const Editor = dynamic(() => import("@monaco-editor/react").then((m) => m.defaul
   ),
 });
 
+// Disable Monaco's built-in diagnostics (red squiggles) for all languages
+function handleEditorMount(_editor: unknown, monaco: { languages: { typescript: { javascriptDefaults: { setDiagnosticsOptions: (opts: Record<string, boolean>) => void }; typescriptDefaults: { setDiagnosticsOptions: (opts: Record<string, boolean>) => void } } } }) {
+  monaco.languages.typescript.javascriptDefaults.setDiagnosticsOptions({
+    noSemanticValidation: true,
+    noSyntaxValidation: true,
+  });
+  monaco.languages.typescript.typescriptDefaults.setDiagnosticsOptions({
+    noSemanticValidation: true,
+    noSyntaxValidation: true,
+  });
+}
+
 interface CodeBlockProps {
   blockId: string;
   code: string;
@@ -188,6 +200,7 @@ export default function CodeBlock({ blockId, code, language, articleId, articleC
                 language={langInfo.monacoLang}
                 value={currentCode}
                 onChange={handleEditorChange}
+                onMount={handleEditorMount}
                 theme="vs-dark"
                 options={editorOptions}
               />

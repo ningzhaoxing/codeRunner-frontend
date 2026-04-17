@@ -13,13 +13,14 @@ interface MarkdownRendererProps {
   articleContent?: string;
 }
 
-function extractCodeBlocks(content: string): { block_id: string; language: string; code: string }[] {
+function extractCodeBlocks(content: string, articleId?: string): { block_id: string; language: string; code: string }[] {
   const blocks: { block_id: string; language: string; code: string }[] = [];
   const regex = /```(\w+)\n([\s\S]*?)```/g;
   let match;
   let i = 0;
+  const prefix = articleId || "post";
   while ((match = regex.exec(content)) !== null) {
-    blocks.push({ block_id: `block-${i}`, language: match[1], code: match[2].trim() });
+    blocks.push({ block_id: `${prefix}-block-${i}`, language: match[1], code: match[2].trim() });
     i++;
   }
   return blocks;
@@ -29,7 +30,7 @@ export default function MarkdownRenderer({ content, articleId, articleContent }:
   const blockCounterRef = useRef(0);
   blockCounterRef.current = 0;
 
-  const allCodeBlocks = useMemo(() => extractCodeBlocks(content), [content]);
+  const allCodeBlocks = useMemo(() => extractCodeBlocks(content, articleId), [content, articleId]);
 
   const components = useMemo<Components>(
     () => ({
@@ -55,7 +56,7 @@ export default function MarkdownRenderer({ content, articleId, articleContent }:
         const isBlock = Boolean(className?.startsWith("language-"));
         if (isBlock) {
           const lang = className?.replace("language-", "") || "text";
-          const blockId = `block-${blockCounterRef.current++}`;
+          const blockId = `${articleId || "post"}-block-${blockCounterRef.current++}`;
           const codeText = String(children).replace(/\n$/, "");
           return (
             <CodeBlock
