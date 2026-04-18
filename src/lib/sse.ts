@@ -25,6 +25,7 @@ export async function fetchSSE(
 
   const decoder = new TextDecoder();
   let buffer = "";
+  let currentEvent = "";
 
   while (true) {
     const { done, value } = await reader.read();
@@ -36,10 +37,26 @@ export async function fetchSSE(
 
     for (const line of lines) {
       const trimmed = line.trim();
+
+      // Handle "event: xxx" lines
+      if (trimmed.startsWith("event: ")) {
+        currentEvent = trimmed.slice(7);
+        continue;
+      }
+
+      // Handle "data: xxx" lines
       if (trimmed.startsWith("data: ")) {
         try {
           const data = JSON.parse(trimmed.slice(6));
-          onEvent(data as SSEEvent);
+
+          // If there was an "event:" line, use it as type
+          if (currentEvent) {
+            onEvent({ type: currentEvent, ...data } as SSEEvent);
+            currentEvent = "";
+          } else {
+            // Otherwise expect data to have a "type" field
+            onEvent(data as SSEEvent);
+          }
         } catch {
           // skip malformed JSON
         }

@@ -39,7 +39,7 @@ interface CodeBlockProps {
   language: string;
   articleId?: string;
   articleContent?: string;
-  allCodeBlocks?: { block_id: string; language: string; code: string }[];
+  allCodeBlocks?: { language: string; code: string }[];
 }
 
 interface LangInfo {

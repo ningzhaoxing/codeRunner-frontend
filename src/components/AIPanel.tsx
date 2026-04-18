@@ -12,7 +12,7 @@ interface AIPanelProps {
   blockId: string;
   articleId: string;
   articleContent: string;
-  allCodeBlocks: { block_id: string; language: string; code: string }[];
+  allCodeBlocks: { language: string; code: string }[];
 }
 
 let msgIdCounter = 0;
@@ -59,7 +59,6 @@ export default function AIPanel({ blockId, articleId, articleContent, allCodeBlo
       const controller = new AbortController();
       abortRef.current = controller;
 
-      const currentCode = usePostStore.getState().codeBlocks[blockId]?.code ?? "";
       const currentSessionId = usePostStore.getState().session.sessionId;
 
       const articleCtx =
@@ -76,12 +75,10 @@ export default function AIPanel({ blockId, articleId, articleContent, allCodeBlo
           {
             session_id: currentSessionId ?? "",
             user_message: text,
-            active_block_id: blockId,
-            current_code: currentCode,
             article_ctx: articleCtx,
           },
           (event: SSEEvent) => {
-            if (event.type === "session" && typeof event.session_id === "string") {
+            if ((event.type === "session" || event.type === "session_created") && typeof event.session_id === "string") {
               setSessionId(event.session_id);
             } else if (event.type === "chunk" && typeof event.content === "string") {
               aiContent += event.content;

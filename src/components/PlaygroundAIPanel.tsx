@@ -68,7 +68,7 @@ export default function PlaygroundAIPanel() {
           ? {
               article_id: "",
               article_content: "",
-              code_blocks: [{ block_id: BLOCK_ID, language: currentLang, code: currentCode }],
+              code_blocks: [{ language: currentLang, code: currentCode }],
             }
           : undefined;
 
@@ -81,12 +81,10 @@ export default function PlaygroundAIPanel() {
           {
             session_id: currentSessionId ?? "",
             user_message: text,
-            active_block_id: BLOCK_ID,
-            current_code: currentCode,
             article_ctx: articleCtx,
           },
           (event: SSEEvent) => {
-            if (event.type === "session" && typeof event.session_id === "string") {
+            if ((event.type === "session" || event.type === "session_created") && typeof event.session_id === "string") {
               setSessionId(event.session_id);
             } else if (event.type === "chunk" && typeof event.content === "string") {
               aiContent += event.content;
