@@ -1,6 +1,6 @@
 import { fetchSSE, type SSEEvent } from "./sse";
 
-const API_BASE = process.env.NEXT_PUBLIC_API_BASE || "http://localhost:8081";
+const API_BASE = process.env.NEXT_PUBLIC_API_BASE || "http://localhost:7979";
 
 export async function executeCode(
   language: string,

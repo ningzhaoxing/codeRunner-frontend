@@ -116,7 +116,7 @@ content/                        # 博客内容
 
 - Node.js >= 20
 - npm
-- CodeRunner 后端服务已运行（默认地址 `http://localhost:8081`）
+- CodeRunner 后端服务已运行（默认地址 `http://localhost:7979`）
 
 ### 安装步骤
 
@@ -142,7 +142,7 @@ cp .env.local.example .env.local
 
 ```bash
 # 后端 API 地址
-NEXT_PUBLIC_API_BASE=http://localhost:8081
+NEXT_PUBLIC_API_BASE=http://localhost:7979
 ```
 
 4. 启动开发服务器：
@@ -165,7 +165,7 @@ npm start
 ```bash
 # 构建镜像（可通过 build-arg 指定后端地址）
 docker build -t coderunner-front \
-  --build-arg NEXT_PUBLIC_API_BASE=http://your-api-host:8081 .
+  --build-arg NEXT_PUBLIC_API_BASE=http://your-api-host:7979 .
 
 # 运行容器
 docker run -p 3000:3000 coderunner-front
