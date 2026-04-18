@@ -3,18 +3,19 @@ import { fetchSSE, type SSEEvent } from "./sse";
 const API_BASE = process.env.NEXT_PUBLIC_API_BASE || "http://localhost:8081";
 
 export async function executeCode(
-  id: string,
   language: string,
   codeBlock: string,
-  onEvent: (event: SSEEvent) => void,
-  signal?: AbortSignal
-): Promise<void> {
-  await fetchSSE(
-    `${API_BASE}/api/execute`,
-    { id, language, codeBlock },
-    onEvent,
-    signal
-  );
+): Promise<{ id: string; result: string; err: string; language: string }> {
+  const res = await fetch(`${API_BASE}/execute`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ language, code_block: codeBlock }),
+  });
+  if (!res.ok) {
+    const body = await res.json().catch(() => ({ message: res.statusText }));
+    throw new Error(body.message || `HTTP ${res.status}`);
+  }
+  return res.json();
 }
 
 export async function chatWithAgent(

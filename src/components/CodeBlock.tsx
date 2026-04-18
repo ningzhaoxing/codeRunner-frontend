@@ -6,7 +6,6 @@ import { useRouter } from "next/navigation";
 import { usePostStore } from "@/store/usePostStore";
 import { executeCode } from "@/lib/api";
 import { encodeCode } from "@/lib/share";
-import type { SSEEvent } from "@/lib/sse";
 import CodeBlockHeader from "./CodeBlockHeader";
 import OutputPanel from "./OutputPanel";
 import AIPanel from "./AIPanel";
@@ -120,37 +119,14 @@ export default function CodeBlock({ blockId, code, language, articleId, articleC
     setOutput(blockId, null, null);
     setRunning(blockId, true);
 
-    const controller = new AbortController();
-    abortRef.current = controller;
-    const timeoutId = setTimeout(() => controller.abort(), 30000);
-
     try {
-      await executeCode(
-        blockId,
-        langInfo.monacoLang,
-        currentCode,
-        (event: SSEEvent) => {
-          if (event.type === "result") {
-            const out = (event.output as string | null) ?? null;
-            const err = (event.error as string | null) ?? null;
-            setOutput(blockId, out, err);
-          } else if (event.type === "error") {
-            const msg = (event.message as string) ?? "执行出错";
-            setOutput(blockId, null, msg);
-          }
-        },
-        controller.signal
-      );
+      const resp = await executeCode(langInfo.monacoLang, currentCode);
+      setOutput(blockId, resp.result || null, resp.err || null);
     } catch (err) {
-      if (err instanceof Error && err.name === "AbortError") {
-        setOutput(blockId, null, "执行超时");
-      } else {
-        setOutput(blockId, null, "网络错误，请重试");
-      }
+      const msg = err instanceof Error ? err.message : "网络错误，请重试";
+      setOutput(blockId, null, msg);
     } finally {
-      clearTimeout(timeoutId);
       setRunning(blockId, false);
-      abortRef.current = null;
     }
   };
 

@@ -8,7 +8,6 @@ import { templates } from "@/lib/templates";
 import { decodeCode } from "@/lib/share";
 import { copyShareURL } from "@/lib/share";
 import { executeCode } from "@/lib/api";
-import type { SSEEvent } from "@/lib/sse";
 import type { SupportedLanguage } from "@/lib/templates";
 import { SUPPORTED_LANGUAGES } from "@/lib/templates";
 import PlaygroundToolbar from "@/components/PlaygroundToolbar";
@@ -83,40 +82,17 @@ function PlaygroundContent() {
     setOutput(null, null);
     setRunning(true);
 
-    const controller = new AbortController();
-    abortRef.current = controller;
-    const timeoutId = setTimeout(() => controller.abort(), 30000);
-
     const currentCode = usePlaygroundStore.getState().code;
     const currentLang = usePlaygroundStore.getState().language;
 
     try {
-      await executeCode(
-        "playground",
-        templates[currentLang].monacoLang,
-        currentCode,
-        (event: SSEEvent) => {
-          if (event.type === "result") {
-            const out = (event.output as string | null) ?? null;
-            const err = (event.error as string | null) ?? null;
-            setOutput(out, err);
-          } else if (event.type === "error") {
-            const msg = (event.message as string) ?? "执行出错";
-            setOutput(null, msg);
-          }
-        },
-        controller.signal,
-      );
+      const resp = await executeCode(templates[currentLang].monacoLang, currentCode);
+      setOutput(resp.result || null, resp.err || null);
     } catch (err) {
-      if (err instanceof Error && err.name === "AbortError") {
-        setOutput(null, "执行超时");
-      } else {
-        setOutput(null, "网络错误，请重试");
-      }
+      const msg = err instanceof Error ? err.message : "网络错误，请重试";
+      setOutput(null, msg);
     } finally {
-      clearTimeout(timeoutId);
       setRunning(false);
-      abortRef.current = null;
     }
   }, [isRunning, setOutput, setRunning]);
 
