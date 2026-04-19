@@ -5,12 +5,19 @@ export default function PostCard({ post }: { post: Article }) {
   return (
     <article className="py-5 border-b border-border px-3 -mx-3 rounded-lg hover:bg-[#151530] transition-colors">
       <div className="flex items-start justify-between gap-4">
-        <Link
-          href={`/posts/${post.slug}`}
-          className="text-text-title text-[15px] font-medium hover:text-accent transition-colors"
-        >
-          {post.title}
-        </Link>
+        <div className="flex items-center gap-2">
+          {post.pinned && (
+            <span className="text-accent text-xs shrink-0" title="置顶">
+              📌
+            </span>
+          )}
+          <Link
+            href={`/posts/${post.slug}`}
+            className="text-text-title text-[15px] font-medium hover:text-accent transition-colors"
+          >
+            {post.title}
+          </Link>
+        </div>
         <span className="text-text-disabled text-xs shrink-0 mt-[3px]">{post.date}</span>
       </div>
       {post.summary && (

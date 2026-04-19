@@ -5,6 +5,7 @@ export interface Article {
   tags: string[];
   summary: string;
   content: string;
+  pinned?: boolean;
 }
 
 export interface CodeBlockState {

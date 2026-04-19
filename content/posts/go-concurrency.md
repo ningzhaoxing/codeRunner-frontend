@@ -3,6 +3,7 @@ title: "Go 并发编程：从 Goroutine 到 Channel"
 date: "2026-04-10"
 tags: [Go, 并发]
 summary: "深入理解 Go 并发模型，通过可运行的代码示例学习 goroutine、channel 和 select。"
+pinned: true
 ---
 
 Go 语言的并发模型基于 CSP（Communicating Sequential Processes），核心概念是 `goroutine` 和 `channel`。

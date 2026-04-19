@@ -18,10 +18,16 @@ export function getAllPosts(): Article[] {
       date: data.date ? String(data.date) : "",
       tags: data.tags || [],
       summary: data.summary || "",
+      pinned: data.pinned === true,
       content,
     };
   });
-  return posts.sort((a, b) => (a.date > b.date ? -1 : 1));
+  // Pinned first, then by date descending
+  return posts.sort((a, b) => {
+    if (a.pinned && !b.pinned) return -1;
+    if (!a.pinned && b.pinned) return 1;
+    return a.date > b.date ? -1 : 1;
+  });
 }
 
 export function getPostBySlug(slug: string): Article | null {
@@ -35,6 +41,7 @@ export function getPostBySlug(slug: string): Article | null {
     date: data.date ? String(data.date) : "",
     tags: data.tags || [],
     summary: data.summary || "",
+    pinned: data.pinned === true,
     content,
   };
 }
