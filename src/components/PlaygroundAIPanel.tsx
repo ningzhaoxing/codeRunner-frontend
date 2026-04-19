@@ -31,7 +31,6 @@ export default function PlaygroundAIPanel() {
   const setOutput = usePlaygroundStore((s) => s.setOutput);
 
   const abortRef = useRef<AbortController | null>(null);
-  const sentArticleCtx = useRef(false);
 
   const sendMessage = useCallback(
     async (text: string) => {
@@ -63,16 +62,14 @@ export default function PlaygroundAIPanel() {
       const currentLang = usePlaygroundStore.getState().language;
       const currentSessionId = usePlaygroundStore.getState().sessionId;
 
-      const articleCtx =
-        !sentArticleCtx.current && !currentSessionId
-          ? {
-              article_id: "",
-              article_content: "",
-              code_blocks: [{ language: currentLang, code: currentCode }],
-            }
-          : undefined;
-
-      if (articleCtx) sentArticleCtx.current = true;
+      // Always send article_ctx when there's no session yet
+      const articleCtx = !currentSessionId
+        ? {
+            article_id: "",
+            article_content: "",
+            code_blocks: [{ language: currentLang, code: currentCode }],
+          }
+        : undefined;
 
       let aiContent = "";
 

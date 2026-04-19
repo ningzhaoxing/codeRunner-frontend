@@ -32,7 +32,7 @@ export default function AIPanel({ blockId, articleId, articleContent, allCodeBlo
   const setOutput = usePostStore((s) => s.setOutput);
 
   const abortRef = useRef<AbortController | null>(null);
-  const sentArticleCtx = useRef(false);
+
   const sendMessage = useCallback(
     async (text: string) => {
       if (session.isStreaming) return;
@@ -61,12 +61,10 @@ export default function AIPanel({ blockId, articleId, articleContent, allCodeBlo
 
       const currentSessionId = usePostStore.getState().session.sessionId;
 
-      const articleCtx =
-        !sentArticleCtx.current && !currentSessionId
-          ? { article_id: articleId, article_content: articleContent, code_blocks: allCodeBlocks }
-          : undefined;
-
-      if (articleCtx) sentArticleCtx.current = true;
+      // Always send article_ctx when there's no session yet
+      const articleCtx = !currentSessionId
+        ? { article_id: articleId, article_content: articleContent, code_blocks: allCodeBlocks }
+        : undefined;
 
       let aiContent = "";
 
