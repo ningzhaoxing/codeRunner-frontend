@@ -10,9 +10,9 @@ export interface OnboardingStep {
 export const ONBOARDING_STEPS: OnboardingStep[] = [
   {
     id: "welcome",
-    targetSelector: ".hero-section",
+    targetSelector: '[data-onboarding-target="first-post"]',
     content:
-      "👋 欢迎来到 CodeRunner！这里的代码块不只是展示，还能直接运行。点击文章试试看 →",
+      "👋 欢迎来到 CodeRunner！这里的代码块不只是展示，还能直接运行。点击这篇文章试试看 →",
     position: "bottom",
     route: "/",
   },

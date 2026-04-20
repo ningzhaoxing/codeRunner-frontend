@@ -1,9 +1,12 @@
 import Link from "next/link";
 import type { Article } from "@/types";
 
-export default function PostCard({ post }: { post: Article }) {
+export default function PostCard({ post, isFirst }: { post: Article; isFirst?: boolean }) {
   return (
-    <article className="py-5 border-b border-border px-3 -mx-3 rounded-lg hover:bg-[#151530] transition-colors">
+    <article
+      className="py-5 border-b border-border px-3 -mx-3 rounded-lg hover:bg-[#151530] transition-colors"
+      data-onboarding-target={isFirst ? "first-post" : undefined}
+    >
       <div className="flex items-start justify-between gap-4">
         <div className="flex items-center gap-2">
           {post.pinned && (

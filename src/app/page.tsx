@@ -23,7 +23,7 @@ export default function Home() {
         {posts.length === 0 ? (
           <p className="text-text-disabled text-sm py-8">暂无文章</p>
         ) : (
-          posts.map((post) => <PostCard key={post.slug} post={post} />)
+          posts.map((post, i) => <PostCard key={post.slug} post={post} isFirst={i === 0} />)
         )}
       </section>
     </div>
