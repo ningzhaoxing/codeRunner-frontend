@@ -3,6 +3,7 @@
 import { useCallback, useRef } from "react";
 import { usePostStore } from "@/store/usePostStore";
 import { chatWithAgent, cancelAgent } from "@/lib/api";
+import { generateSessionId } from "@/lib/session";
 import type { SSEEvent } from "@/lib/sse";
 import type { Proposal, ChatMessage } from "@/types";
 import ChatMessages from "./ChatMessages";
@@ -36,7 +37,6 @@ export default function AIPanel({ blockId, articleId, articleContent, allCodeBlo
 
   const sendMessage = useCallback(
     async (text: string) => {
-      console.log("[AIPanel] sendMessage called, isStreaming:", session.isStreaming);
       if (session.isStreaming) return;
 
       const userMsg: ChatMessage = {
@@ -67,10 +67,9 @@ export default function AIPanel({ blockId, articleId, articleContent, allCodeBlo
         // Frontend controls session_id: generate one if not exists
         let currentSessionId = usePostStore.getState().session.sessionId;
         if (!currentSessionId) {
-          currentSessionId = crypto.randomUUID();
+          currentSessionId = generateSessionId();
           setSessionId(currentSessionId);
         }
-        console.log("[AIPanel] about to fetch, sessionId:", currentSessionId);
 
         // Always send article_ctx with session_id (backend uses reset mode: hasSession && hasArticle)
         // On first message this creates the session; on subsequent messages backend continues it

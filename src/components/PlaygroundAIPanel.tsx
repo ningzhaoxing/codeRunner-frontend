@@ -3,6 +3,7 @@
 import { useCallback, useRef } from "react";
 import { usePlaygroundStore } from "@/store/usePlaygroundStore";
 import { chatWithAgent, cancelAgent } from "@/lib/api";
+import { generateSessionId } from "@/lib/session";
 import type { SSEEvent } from "@/lib/sse";
 import type { Proposal, ChatMessage } from "@/types";
 import ChatMessages from "./ChatMessages";
@@ -64,10 +65,16 @@ export default function PlaygroundAIPanel() {
       try {
         const currentCode = usePlaygroundStore.getState().code;
         const currentLang = usePlaygroundStore.getState().language;
-        const currentSessionId = usePlaygroundStore.getState().sessionId;
+        let currentSessionId = usePlaygroundStore.getState().sessionId;
+
+        // Generate session_id if not exists
+        if (!currentSessionId) {
+          currentSessionId = generateSessionId();
+          setSessionId(currentSessionId);
+        }
 
         // Always send article_ctx when there's no session yet
-        const articleCtx = !currentSessionId
+        const articleCtx = usePlaygroundStore.getState().aiMessages.length === 0
           ? {
               article_id: "",
               article_content: "",
@@ -78,7 +85,7 @@ export default function PlaygroundAIPanel() {
 
         await chatWithAgent(
           {
-            session_id: currentSessionId ?? "",
+            session_id: currentSessionId,
             user_message: text,
             article_ctx: articleCtx,
           },
