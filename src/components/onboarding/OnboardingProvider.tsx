@@ -26,18 +26,26 @@ export default function OnboardingProvider({
     if (!step) return;
 
     const el = document.querySelector<HTMLElement>(step.targetSelector);
-    setTargetElement(el);
 
     if (el) {
+      setTargetElement(el);
       el.scrollIntoView({ behavior: "smooth", block: "center" });
+    } else {
+      console.warn(`[Onboarding] Target not found: ${step.targetSelector}`);
     }
   }, [isActive, currentStep, setTargetElement]);
 
   useEffect(() => {
+    if (!isActive) return;
+
     findTarget();
-    const timer = setTimeout(findTarget, 300);
-    return () => clearTimeout(timer);
-  }, [findTarget]);
+
+    const retryTimers = [100, 300, 600, 1000].map((delay) =>
+      setTimeout(findTarget, delay)
+    );
+
+    return () => retryTimers.forEach(clearTimeout);
+  }, [findTarget, isActive]);
 
   useEffect(() => {
     function handleKeyDown(e: KeyboardEvent) {

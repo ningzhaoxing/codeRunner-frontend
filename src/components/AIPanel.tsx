@@ -2,7 +2,7 @@
 
 import { useCallback, useRef } from "react";
 import { usePostStore } from "@/store/usePostStore";
-import { chatWithAgent } from "@/lib/api";
+import { chatWithAgent, cancelAgent } from "@/lib/api";
 import type { SSEEvent } from "@/lib/sse";
 import type { Proposal, ChatMessage } from "@/types";
 import ChatMessages from "./ChatMessages";
@@ -169,6 +169,29 @@ export default function AIPanel({ blockId, articleId, articleContent, allCodeBlo
     if (session.isStreaming) return;
     newSession(blockId);
   }, [session.isStreaming, newSession, blockId]);
+
+  const handleCancel = useCallback(async () => {
+    if (!session.isStreaming || !session.sessionId) return;
+
+    // Abort SSE connection
+    if (abortRef.current) {
+      abortRef.current.abort();
+    }
+
+    // Call backend cancel API
+    try {
+      await cancelAgent(session.sessionId);
+      addAIMessage(blockId, {
+        id: nextMsgId(),
+        blockId,
+        type: "system",
+        content: "已取消执行",
+        timestamp: Date.now(),
+      });
+    } catch (err) {
+      // Ignore cancel errors (404 if no active run is fine)
+    }
+  }, [session.isStreaming, session.sessionId, blockId, addAIMessage]);
 
   return (
     <div className="flex flex-col h-full bg-surface-0">

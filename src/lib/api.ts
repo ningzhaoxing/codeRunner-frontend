@@ -47,3 +47,16 @@ export async function confirmProposal(
     signal,
   );
 }
+
+export async function cancelAgent(sessionId: string): Promise<{ message: string }> {
+  const res = await fetch(`${API_BASE}/agent/cancel`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ session_id: sessionId }),
+  });
+  if (!res.ok) {
+    const body = await res.json().catch(() => ({ message: res.statusText }));
+    throw new Error(body.message || `HTTP ${res.status}`);
+  }
+  return res.json();
+}
