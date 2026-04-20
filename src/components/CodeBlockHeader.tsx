@@ -33,6 +33,7 @@ export default function CodeBlockHeader({
           onClick={onRun}
           disabled={isRunning}
           className="text-accent bg-surface-3 hover:bg-surface-2 px-2 py-0.5 rounded text-xs font-mono transition-colors disabled:opacity-50"
+          data-onboarding-target="run-button"
         >
           {isRunning ? "⏳" : "▶ Run"}
         </button>
@@ -40,6 +41,7 @@ export default function CodeBlockHeader({
           onClick={onToggleAI}
           className="hover:bg-surface-3 px-1.5 py-0.5 rounded text-xs transition-colors"
           title="AI Assistant"
+          data-onboarding-target="ai-button"
         >
           🤖
         </button>

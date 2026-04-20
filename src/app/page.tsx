@@ -7,7 +7,7 @@ export default function Home() {
   return (
     <div className="max-w-[720px] mx-auto px-6 pt-14">
       {/* Hero */}
-      <section className="py-12">
+      <section className="py-12 hero-section">
         <h1 className="text-text-title text-2xl font-semibold mb-3">Hi, I&apos;m Ning 👋</h1>
         <p className="text-text-secondary text-[15px] leading-relaxed">
           这里记录我的技术思考与探索。博客中的代码块支持{" "}

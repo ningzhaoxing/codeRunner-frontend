@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import OnboardingTrigger from "./onboarding/OnboardingTrigger";
 
 export default function Navbar() {
   const pathname = usePathname();
@@ -20,9 +21,10 @@ export default function Navbar() {
         </Link>
         <div className="flex items-center gap-6">
           <Link href="/" className={linkClass("/")}>首页</Link>
-          <Link href="/playground" className={linkClass("/playground")}>Playground</Link>
+          <Link href="/playground" className={linkClass("/playground")} data-onboarding-target="playground-link">Playground</Link>
           <Link href="/tags" className={linkClass("/tags")}>标签</Link>
           <Link href="/about" className={linkClass("/about")}>关于</Link>
+          <OnboardingTrigger />
         </div>
       </div>
     </nav>
