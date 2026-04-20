@@ -20,7 +20,7 @@ export default function AboutPage() {
           className="w-20 h-20 rounded-full border-2 border-accent/40 object-cover"
         />
         <div>
-          <h1 className="text-text-title text-2xl font-semibold">关于</h1>
+          <h1 className="text-text-title text-2xl font-semibold">ningzhaoxing</h1>
           <a
             href={GITHUB_URL}
             target="_blank"
