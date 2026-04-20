@@ -10,7 +10,7 @@ export default function OutputPanel({ output, error, isRunning }: OutputPanelPro
   if (!isRunning && !output && !error) return null;
 
   return (
-    <div className="bg-[#0d0d15] border-t border-border px-4 py-3 font-mono text-xs">
+    <div className="bg-[#0d0d15] border-t border-border px-4 py-3 font-mono text-xs max-h-[200px] overflow-y-auto">
       {isRunning && (
         <span className="text-text-secondary animate-pulse">执行中...</span>
       )}

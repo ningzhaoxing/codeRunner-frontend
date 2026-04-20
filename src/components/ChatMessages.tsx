@@ -1,6 +1,8 @@
 "use client";
 
 import { useEffect, useRef } from "react";
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
 import type { ChatMessage } from "@/types";
 import CodeSuggestion from "./CodeSuggestion";
 
@@ -51,8 +53,12 @@ function MessageBubble({ message, blockId }: { message: ChatMessage; blockId: st
   if (type === "ai") {
     return (
       <div className="flex justify-start">
-        <div className="bg-msg-ai border border-[#1a2a35] rounded-[10px_10px_10px_2px] px-3 py-2 text-xs text-text-body max-w-[85%] whitespace-pre-wrap break-words">
-          {content || <span className="animate-pulse text-text-disabled">思考中...</span>}
+        <div className="bg-msg-ai border border-[#1a2a35] rounded-[10px_10px_10px_2px] px-3 py-2 text-xs text-text-body max-w-[85%] prose prose-invert prose-sm prose-pre:bg-[#1e1e1e] prose-pre:border prose-pre:border-border">
+          {content ? (
+            <ReactMarkdown remarkPlugins={[remarkGfm]}>{content}</ReactMarkdown>
+          ) : (
+            <span className="animate-pulse text-text-disabled">思考中...</span>
+          )}
         </div>
       </div>
     );
