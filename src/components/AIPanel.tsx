@@ -3,7 +3,6 @@
 import { useCallback, useRef } from "react";
 import { usePostStore } from "@/store/usePostStore";
 import { chatWithAgent, cancelAgent } from "@/lib/api";
-import { generateSessionId } from "@/lib/session";
 import type { SSEEvent } from "@/lib/sse";
 import type { Proposal, ChatMessage } from "@/types";
 import ChatMessages from "./ChatMessages";
@@ -64,15 +63,8 @@ export default function AIPanel({ blockId, articleId, articleContent, allCodeBlo
       let aiContent = "";
 
       try {
-        // Frontend controls session_id: generate one if not exists
-        let currentSessionId = usePostStore.getState().session.sessionId;
-        if (!currentSessionId) {
-          currentSessionId = generateSessionId();
-          setSessionId(currentSessionId);
-        }
-
-        // Always send article_ctx with session_id (backend uses reset mode: hasSession && hasArticle)
-        // On first message this creates the session; on subsequent messages backend continues it
+        // Get current session_id (may be null on first message)
+        const currentSessionId = usePostStore.getState().session.sessionId;
 
         // Send article_ctx on first message (no messages yet) to create session
         const messages = usePostStore.getState().codeBlocks[blockId]?.aiMessages ?? [];
@@ -84,7 +76,7 @@ export default function AIPanel({ blockId, articleId, articleContent, allCodeBlo
 
         await chatWithAgent(
           {
-            session_id: currentSessionId,
+            session_id: currentSessionId ?? "",
             user_message: text,
             article_ctx: articleCtx,
           },

@@ -1,6 +1,5 @@
 import { create } from "zustand";
 import { CodeBlockState, SessionState, Proposal, ChatMessage } from "@/types";
-import { generateSessionId } from "@/lib/session";
 
 interface PostStore {
   codeBlocks: Record<string, CodeBlockState>;
@@ -147,7 +146,7 @@ export const usePostStore = create<PostStore>((set) => ({
     set((state) => {
       const block = state.codeBlocks[blockId];
       return {
-        session: { ...initialSession, sessionId: generateSessionId() },
+        session: { ...initialSession, sessionId: null },
         codeBlocks: block
           ? { ...state.codeBlocks, [blockId]: { ...block, aiMessages: [] } }
           : state.codeBlocks,
