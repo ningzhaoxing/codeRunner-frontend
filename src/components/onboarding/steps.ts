@@ -27,7 +27,7 @@ export const ONBOARDING_STEPS: OnboardingStep[] = [
     id: "ai-assistant",
     targetSelector: '[data-onboarding-target="ai-button"]',
     content:
-      "🤖 不止是 AI 助手 — 代码学习 Agent 能读懂整篇文章上下文：解释代码、分析报错、生成测试，甚至帮你把不完整的代码片段自动补全成可运行程序。生成代码后回一句「好的」它就帮你跑。",
+      "🤖 代码学习 Agent — 博客里的代码块常常只是一段函数示例，缺 import、缺 main、没法直接跑。它会读懂整篇文章上下文，自动补全成可运行程序，也能解释代码、分析报错、生成边界测试。生成代码后回一句「好的」它就帮你执行。",
     position: "bottom",
   },
   {
