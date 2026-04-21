@@ -11,12 +11,29 @@ export function generateSessionId(): string {
   }
 }
 
-const VISITOR_ID_KEY = "cr_visitor_id";
+const SESSION_KEY_PREFIX = "cr_session_";
+
+export function loadSessionId(articleId: string): string | null {
+  if (typeof window === "undefined") return null;
+  return localStorage.getItem(SESSION_KEY_PREFIX + articleId);
+}
+
+export function saveSessionId(articleId: string, sessionId: string): void {
+  if (typeof window === "undefined") return;
+  localStorage.setItem(SESSION_KEY_PREFIX + articleId, sessionId);
+}
+
+export function clearSessionId(articleId: string): void {
+  if (typeof window === "undefined") return;
+  localStorage.removeItem(SESSION_KEY_PREFIX + articleId);
+}
 
 /**
  * Returns a stable visitor ID for the current browser.
  * Generated once and persisted in localStorage.
  */
+const VISITOR_ID_KEY = "cr_visitor_id";
+
 export function getVisitorId(): string {
   if (typeof window === "undefined") return "";
   let id = localStorage.getItem(VISITOR_ID_KEY);

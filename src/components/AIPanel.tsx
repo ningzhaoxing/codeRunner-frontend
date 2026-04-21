@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useRef } from "react";
+import { useCallback, useEffect, useRef } from "react";
 import { usePostStore } from "@/store/usePostStore";
 import { chatWithAgent, cancelAgent } from "@/lib/api";
 import type { SSEEvent } from "@/lib/sse";
@@ -28,11 +28,18 @@ export default function AIPanel({ blockId, articleId, articleContent, allCodeBlo
   const setStreaming = usePostStore((s) => s.setStreaming);
   const setSessionId = usePostStore((s) => s.setSessionId);
   const addProposal = usePostStore((s) => s.addProposal);
-  const updateProposalStatus = usePostStore((s) => s.updateProposalStatus);
-  const setOutput = usePostStore((s) => s.setOutput);
   const newSession = usePostStore((s) => s.newSession);
+  const loadPersistedSession = usePostStore((s) => s.loadPersistedSession);
 
   const abortRef = useRef<AbortController | null>(null);
+
+  // Restore sessionId from localStorage on mount
+  useEffect(() => {
+    if (!usePostStore.getState().session.sessionId) {
+      const saved = loadPersistedSession(articleId);
+      if (saved) setSessionId(saved, articleId);
+    }
+  }, [articleId, setSessionId, loadPersistedSession]);
 
   const sendMessage = useCallback(
     async (text: string) => {
@@ -45,7 +52,7 @@ export default function AIPanel({ blockId, articleId, articleContent, allCodeBlo
         content: text,
         timestamp: Date.now(),
       };
-      addAIMessage(blockId, userMsg);
+      addAIMessage(blockId, userMsg, articleId);
 
       const aiMsg: ChatMessage = {
         id: nextMsgId(),
@@ -54,7 +61,7 @@ export default function AIPanel({ blockId, articleId, articleContent, allCodeBlo
         content: "",
         timestamp: Date.now(),
       };
-      addAIMessage(blockId, aiMsg);
+      addAIMessage(blockId, aiMsg, articleId);
       setStreaming(true);
 
       const controller = new AbortController();
@@ -63,7 +70,6 @@ export default function AIPanel({ blockId, articleId, articleContent, allCodeBlo
       let aiContent = "";
 
       try {
-        // Get current session_id (may be null on first message)
         const currentSessionId = usePostStore.getState().session.sessionId;
 
         await chatWithAgent(
@@ -74,71 +80,52 @@ export default function AIPanel({ blockId, articleId, articleContent, allCodeBlo
           },
           (event: SSEEvent) => {
             if (event.type === "session_created" && typeof event.session_id === "string") {
-              setSessionId(event.session_id);
+              setSessionId(event.session_id, articleId);
             } else if (event.type === "stream_chunk" && typeof event.content === "string") {
               aiContent += event.content;
-              updateLastAIMessage(blockId, aiContent);
+              updateLastAIMessage(blockId, aiContent, articleId);
             } else if (event.type === "message" && typeof event.content === "string") {
               aiContent += event.content;
-              updateLastAIMessage(blockId, aiContent);
+              updateLastAIMessage(blockId, aiContent, articleId);
             } else if (event.type === "tool_result" && typeof event.content === "string") {
               addAIMessage(blockId, {
-                id: nextMsgId(),
-                blockId,
-                type: "execution_result",
-                content: event.content,
-                timestamp: Date.now(),
-              });
+                id: nextMsgId(), blockId, type: "execution_result",
+                content: event.content, timestamp: Date.now(),
+              }, articleId);
             } else if (event.type === "interrupt") {
               const p = (event as unknown as { proposal: { proposal_id: string; code: string; language: string; description?: string } }).proposal;
               const proposal: Proposal = {
-                id: p.proposal_id,
-                blockId,
-                code: p.code,
-                language: p.language,
-                description: p.description ?? "",
-                createdAt: Date.now(),
-                expiresAt: Date.now() + 10 * 60 * 1000,
-                status: "pending",
+                id: p.proposal_id, blockId, code: p.code, language: p.language,
+                description: p.description ?? "", createdAt: Date.now(),
+                expiresAt: Date.now() + 10 * 60 * 1000, status: "pending",
               };
               addProposal(proposal);
               addAIMessage(blockId, {
-                id: nextMsgId(),
-                blockId,
-                type: "proposal",
-                content: "",
-                proposalId: proposal.id,
-                timestamp: Date.now(),
-              });
+                id: nextMsgId(), blockId, type: "proposal",
+                content: "", proposalId: proposal.id, timestamp: Date.now(),
+              }, articleId);
             } else if (event.type === "error") {
               addAIMessage(blockId, {
-                id: nextMsgId(),
-                blockId,
-                type: "error",
-                content: (event.error as string) ?? "未知错误",
-                timestamp: Date.now(),
-              });
+                id: nextMsgId(), blockId, type: "error",
+                content: (event.error as string) ?? "未知错误", timestamp: Date.now(),
+              }, articleId);
             }
-            // "done" is handled implicitly when the SSE stream ends
           },
           controller.signal
         );
       } catch (err) {
         if (err instanceof Error && err.name !== "AbortError") {
           addAIMessage(blockId, {
-            id: nextMsgId(),
-            blockId,
-            type: "error",
-            content: "网络错误，请重试",
-            timestamp: Date.now(),
-          });
+            id: nextMsgId(), blockId, type: "error",
+            content: "网络错误，请重试", timestamp: Date.now(),
+          }, articleId);
         }
       } finally {
         setStreaming(false);
         abortRef.current = null;
       }
     },
-    [blockId, articleId, articleContent, allCodeBlocks, session.isStreaming, addAIMessage, updateLastAIMessage, setStreaming, setSessionId, addProposal, updateProposalStatus, setOutput]
+    [blockId, articleId, articleContent, allCodeBlocks, session.isStreaming, addAIMessage, updateLastAIMessage, setStreaming, setSessionId, addProposal]
   );
 
   const messages = block?.aiMessages ?? [];
@@ -152,31 +139,20 @@ export default function AIPanel({ blockId, articleId, articleContent, allCodeBlo
 
   const handleNewSession = useCallback(() => {
     if (session.isStreaming) return;
-    newSession(blockId);
-  }, [session.isStreaming, newSession, blockId]);
+    newSession(blockId, articleId);
+  }, [session.isStreaming, newSession, blockId, articleId]);
 
   const handleCancel = useCallback(async () => {
     if (!session.isStreaming || !session.sessionId) return;
-
-    // Abort SSE connection
-    if (abortRef.current) {
-      abortRef.current.abort();
-    }
-
-    // Call backend cancel API
+    if (abortRef.current) abortRef.current.abort();
     try {
       await cancelAgent(session.sessionId);
       addAIMessage(blockId, {
-        id: nextMsgId(),
-        blockId,
-        type: "system",
-        content: "已取消执行",
-        timestamp: Date.now(),
-      });
-    } catch (err) {
-      // Ignore cancel errors (404 if no active run is fine)
-    }
-  }, [session.isStreaming, session.sessionId, blockId, addAIMessage]);
+        id: nextMsgId(), blockId, type: "system",
+        content: "已取消执行", timestamp: Date.now(),
+      }, articleId);
+    } catch { /* 404 if no active run is fine */ }
+  }, [session.isStreaming, session.sessionId, blockId, articleId, addAIMessage]);
 
   return (
     <div className="flex flex-col h-full bg-surface-0">
@@ -216,3 +192,4 @@ export default function AIPanel({ blockId, articleId, articleContent, allCodeBlo
     </div>
   );
 }
+

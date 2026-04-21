@@ -87,7 +87,7 @@ export default function CodeBlock({ blockId, code, language, articleId, articleC
   useEffect(() => {
     const current = usePostStore.getState().codeBlocks[blockId];
     if (!current) {
-      initCodeBlock(blockId, code, language);
+      initCodeBlock(blockId, code, language, articleId);
     }
   }, [blockId, code, language, initCodeBlock]);
 
