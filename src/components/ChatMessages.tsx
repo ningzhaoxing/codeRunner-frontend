@@ -9,9 +9,10 @@ import CodeSuggestion from "./CodeSuggestion";
 interface ChatMessagesProps {
   messages: ChatMessage[];
   blockId: string;
+  statusText?: string | null;
 }
 
-export default function ChatMessages({ messages, blockId }: ChatMessagesProps) {
+export default function ChatMessages({ messages, blockId, statusText }: ChatMessagesProps) {
   const containerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -19,9 +20,9 @@ export default function ChatMessages({ messages, blockId }: ChatMessagesProps) {
     if (el) {
       el.scrollTop = el.scrollHeight;
     }
-  }, [messages]);
+  }, [messages, statusText]);
 
-  if (messages.length === 0) {
+  if (messages.length === 0 && !statusText) {
     return (
       <div className="flex-1 flex items-center justify-center text-text-disabled text-xs">
         点击上方快捷按钮或输入问题开始对话
@@ -34,9 +35,27 @@ export default function ChatMessages({ messages, blockId }: ChatMessagesProps) {
       {messages.map((msg) => (
         <MessageBubble key={msg.id} message={msg} blockId={blockId} />
       ))}
+      {statusText ? <LoadingBubble text={statusText} /> : null}
     </div>
   );
 }
+function LoadingBubble({ text }: { text: string }) {
+  return (
+    <div className="flex justify-start">
+      <div className="bg-msg-ai border border-[#1a2a35] rounded-[10px_10px_10px_2px] px-3 py-2 text-xs text-text-secondary max-w-[85%]">
+        <span className="inline-flex items-center gap-2">
+          <span className="flex gap-1">
+            <span className="h-1.5 w-1.5 rounded-full bg-accent animate-bounce [animation-delay:-0.2s]" />
+            <span className="h-1.5 w-1.5 rounded-full bg-accent animate-bounce [animation-delay:-0.1s]" />
+            <span className="h-1.5 w-1.5 rounded-full bg-accent animate-bounce" />
+          </span>
+          <span>{text}</span>
+        </span>
+      </div>
+    </div>
+  );
+}
+
 function MessageBubble({ message, blockId }: { message: ChatMessage; blockId: string }) {
   const { type, content } = message;
 

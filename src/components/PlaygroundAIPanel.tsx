@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useRef } from "react";
+import { useCallback, useRef, useState, useEffect } from "react";
 import { usePlaygroundStore } from "@/store/usePlaygroundStore";
 import { chatWithAgent, cancelAgent } from "@/lib/api";
 import type { SSEEvent } from "@/lib/sse";
@@ -32,10 +32,21 @@ export default function PlaygroundAIPanel() {
   const setOutput = usePlaygroundStore((s) => s.setOutput);
 
   const abortRef = useRef<AbortController | null>(null);
+  const [statusText, setStatusText] = useState<string | null>(null);
+  const prepareTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    return () => {
+      if (prepareTimerRef.current) clearTimeout(prepareTimerRef.current);
+    };
+  }, []);
 
   const sendMessage = useCallback(
     async (text: string) => {
       if (isStreaming) return;
+
+      if (prepareTimerRef.current) clearTimeout(prepareTimerRef.current);
+      setStatusText(null);
 
       const userMsg: ChatMessage = {
         id: nextMsgId(),
@@ -60,6 +71,21 @@ export default function PlaygroundAIPanel() {
       abortRef.current = controller;
 
       let aiContent = "";
+      let awaitingProposal = false;
+      const schedulePreparingStatus = () => {
+        if (prepareTimerRef.current) clearTimeout(prepareTimerRef.current);
+        prepareTimerRef.current = setTimeout(() => {
+          if (awaitingProposal) setStatusText("Agent 正在准备运行确认...");
+        }, 450);
+      };
+      const clearPreparingStatus = () => {
+        awaitingProposal = false;
+        if (prepareTimerRef.current) {
+          clearTimeout(prepareTimerRef.current);
+          prepareTimerRef.current = null;
+        }
+        setStatusText(null);
+      };
 
       try {
         const currentCode = usePlaygroundStore.getState().code;
@@ -80,12 +106,19 @@ export default function PlaygroundAIPanel() {
             if (event.type === "session_created" && typeof event.session_id === "string") {
               setSessionId(event.session_id);
             } else if (event.type === "stream_chunk" && typeof event.content === "string") {
+              clearPreparingStatus();
               aiContent += event.content;
               updateLastAIMessage(aiContent);
+              awaitingProposal = true;
+              schedulePreparingStatus();
             } else if (event.type === "message" && typeof event.content === "string") {
+              clearPreparingStatus();
               aiContent += event.content;
               updateLastAIMessage(aiContent);
+              awaitingProposal = true;
+              schedulePreparingStatus();
             } else if (event.type === "tool_result" && typeof event.content === "string") {
+              clearPreparingStatus();
               addAIMessage({
                 id: nextMsgId(),
                 blockId: BLOCK_ID,
@@ -94,6 +127,7 @@ export default function PlaygroundAIPanel() {
                 timestamp: Date.now(),
               });
             } else if (event.type === "interrupt") {
+              clearPreparingStatus();
               const p = (event as unknown as { proposal: { proposal_id: string; code: string; language: string; description?: string } }).proposal;
               const proposal: Proposal = {
                 id: p.proposal_id,
@@ -115,6 +149,7 @@ export default function PlaygroundAIPanel() {
                 timestamp: Date.now(),
               });
             } else if (event.type === "error") {
+              clearPreparingStatus();
               addAIMessage({
                 id: nextMsgId(),
                 blockId: BLOCK_ID,
@@ -122,11 +157,14 @@ export default function PlaygroundAIPanel() {
                 content: (event.error as string) ?? "未知错误",
                 timestamp: Date.now(),
               });
+            } else if (event.type === "done") {
+              clearPreparingStatus();
             }
           },
           controller.signal,
         );
       } catch (err) {
+        clearPreparingStatus();
         if (err instanceof Error && err.name !== "AbortError") {
           addAIMessage({
             id: nextMsgId(),
@@ -137,6 +175,7 @@ export default function PlaygroundAIPanel() {
           });
         }
       } finally {
+        clearPreparingStatus();
         setStreaming(false);
         abortRef.current = null;
       }
@@ -157,6 +196,12 @@ export default function PlaygroundAIPanel() {
 
   const handleCancel = useCallback(async () => {
     if (!isStreaming || !sessionId) return;
+
+    if (prepareTimerRef.current) {
+      clearTimeout(prepareTimerRef.current);
+      prepareTimerRef.current = null;
+    }
+    setStatusText(null);
 
     // Abort SSE connection
     if (abortRef.current) {
@@ -211,7 +256,7 @@ export default function PlaygroundAIPanel() {
           </button>
         </div>
       </div>
-      <ChatMessages messages={aiMessages} blockId={BLOCK_ID} />
+      <ChatMessages messages={aiMessages} blockId={BLOCK_ID} statusText={statusText} />
       <ChatInput onSend={sendMessage} disabled={isStreaming} />
     </div>
   );

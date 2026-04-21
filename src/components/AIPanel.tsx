@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useRef } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { usePostStore } from "@/store/usePostStore";
 import { chatWithAgent, cancelAgent } from "@/lib/api";
 import type { SSEEvent } from "@/lib/sse";
@@ -33,8 +33,15 @@ export default function AIPanel({ blockId, blockIndex, articleId, articleContent
   const loadPersistedSession = usePostStore((s) => s.loadPersistedSession);
 
   const abortRef = useRef<AbortController | null>(null);
+  const [statusText, setStatusText] = useState<string | null>(null);
+  const prepareTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  // Restore sessionId from localStorage on mount
+  useEffect(() => {
+    return () => {
+      if (prepareTimerRef.current) clearTimeout(prepareTimerRef.current);
+    };
+  }, []);
+
   useEffect(() => {
     if (!usePostStore.getState().session.sessionId) {
       const saved = loadPersistedSession(articleId);
@@ -45,6 +52,9 @@ export default function AIPanel({ blockId, blockIndex, articleId, articleContent
   const sendMessage = useCallback(
     async (text: string) => {
       if (session.isStreaming) return;
+
+      if (prepareTimerRef.current) clearTimeout(prepareTimerRef.current);
+      setStatusText(null);
 
       const userMsg: ChatMessage = {
         id: nextMsgId(),
@@ -69,6 +79,21 @@ export default function AIPanel({ blockId, blockIndex, articleId, articleContent
       abortRef.current = controller;
 
       let aiContent = "";
+      let awaitingProposal = false;
+      const schedulePreparingStatus = () => {
+        if (prepareTimerRef.current) clearTimeout(prepareTimerRef.current);
+        prepareTimerRef.current = setTimeout(() => {
+          if (awaitingProposal) setStatusText("Agent 正在准备运行确认...");
+        }, 450);
+      };
+      const clearPreparingStatus = () => {
+        awaitingProposal = false;
+        if (prepareTimerRef.current) {
+          clearTimeout(prepareTimerRef.current);
+          prepareTimerRef.current = null;
+        }
+        setStatusText(null);
+      };
 
       try {
         const currentSessionId = usePostStore.getState().session.sessionId;
@@ -83,17 +108,25 @@ export default function AIPanel({ blockId, blockIndex, articleId, articleContent
             if (event.type === "session_created" && typeof event.session_id === "string") {
               setSessionId(event.session_id, articleId);
             } else if (event.type === "stream_chunk" && typeof event.content === "string") {
+              clearPreparingStatus();
               aiContent += event.content;
               updateLastAIMessage(blockId, aiContent, articleId);
+              awaitingProposal = true;
+              schedulePreparingStatus();
             } else if (event.type === "message" && typeof event.content === "string") {
+              clearPreparingStatus();
               aiContent += event.content;
               updateLastAIMessage(blockId, aiContent, articleId);
+              awaitingProposal = true;
+              schedulePreparingStatus();
             } else if (event.type === "tool_result" && typeof event.content === "string") {
+              clearPreparingStatus();
               addAIMessage(blockId, {
                 id: nextMsgId(), blockId, type: "execution_result",
                 content: event.content, timestamp: Date.now(),
               }, articleId);
             } else if (event.type === "interrupt") {
+              clearPreparingStatus();
               const p = (event as unknown as { proposal: { proposal_id: string; code: string; language: string; description?: string } }).proposal;
               const proposal: Proposal = {
                 id: p.proposal_id, blockId, code: p.code, language: p.language,
@@ -106,15 +139,19 @@ export default function AIPanel({ blockId, blockIndex, articleId, articleContent
                 content: "", proposalId: proposal.id, timestamp: Date.now(),
               }, articleId);
             } else if (event.type === "error") {
+              clearPreparingStatus();
               addAIMessage(blockId, {
                 id: nextMsgId(), blockId, type: "error",
                 content: (event.error as string) ?? "未知错误", timestamp: Date.now(),
               }, articleId);
+            } else if (event.type === "done") {
+              clearPreparingStatus();
             }
           },
           controller.signal
         );
       } catch (err) {
+        clearPreparingStatus();
         if (err instanceof Error && err.name !== "AbortError") {
           addAIMessage(blockId, {
             id: nextMsgId(), blockId, type: "error",
@@ -122,6 +159,7 @@ export default function AIPanel({ blockId, blockIndex, articleId, articleContent
           }, articleId);
         }
       } finally {
+        clearPreparingStatus();
         setStreaming(false);
         abortRef.current = null;
       }
@@ -145,6 +183,11 @@ export default function AIPanel({ blockId, blockIndex, articleId, articleContent
 
   const handleCancel = useCallback(async () => {
     if (!session.isStreaming || !session.sessionId) return;
+    if (prepareTimerRef.current) {
+      clearTimeout(prepareTimerRef.current);
+      prepareTimerRef.current = null;
+    }
+    setStatusText(null);
     if (abortRef.current) abortRef.current.abort();
     try {
       await cancelAgent(session.sessionId);
@@ -188,7 +231,7 @@ export default function AIPanel({ blockId, blockIndex, articleId, articleContent
           </button>
         </div>
       </div>
-      <ChatMessages messages={messages} blockId={blockId} />
+      <ChatMessages messages={messages} blockId={blockId} statusText={statusText} />
       <ChatInput onSend={sendMessage} disabled={isStreaming} />
     </div>
   );
