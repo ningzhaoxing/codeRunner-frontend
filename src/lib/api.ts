@@ -1,4 +1,5 @@
 import { fetchSSE, type SSEEvent } from "./sse";
+import { getVisitorId } from "./session";
 
 const API_BASE = process.env.NEXT_PUBLIC_API_BASE || "http://localhost:50012";
 
@@ -31,7 +32,7 @@ export async function chatWithAgent(
   onEvent: (event: SSEEvent) => void,
   signal?: AbortSignal
 ): Promise<void> {
-  await fetchSSE(`${API_BASE}/agent/chat`, params, onEvent, signal);
+  await fetchSSE(`${API_BASE}/agent/chat`, { ...params, visitor_id: getVisitorId() }, onEvent, signal);
 }
 
 export async function confirmProposal(
@@ -42,7 +43,7 @@ export async function confirmProposal(
 ): Promise<void> {
   await fetchSSE(
     `${API_BASE}/agent/confirm`,
-    { session_id: sessionId, proposal_id: proposalId },
+    { session_id: sessionId, proposal_id: proposalId, visitor_id: getVisitorId() },
     onEvent,
     signal,
   );
@@ -52,7 +53,7 @@ export async function cancelAgent(sessionId: string): Promise<{ message: string 
   const res = await fetch(`${API_BASE}/agent/cancel`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ session_id: sessionId }),
+    body: JSON.stringify({ session_id: sessionId, visitor_id: getVisitorId() }),
   });
   if (!res.ok) {
     const body = await res.json().catch(() => ({ message: res.statusText }));

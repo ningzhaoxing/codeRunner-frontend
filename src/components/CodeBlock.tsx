@@ -72,6 +72,7 @@ export default function CodeBlock({ blockId, code, language, articleId, articleC
   const langInfo = useMemo(() => resolveLanguage(language), [language]);
 
   const block = usePostStore((s) => s.codeBlocks[blockId]);
+  const session = usePostStore((s) => s.session);
   const initCodeBlock = usePostStore((s) => s.initCodeBlock);
   const updateCode = usePostStore((s) => s.updateCode);
   const setOutput = usePostStore((s) => s.setOutput);
@@ -109,9 +110,15 @@ export default function CodeBlock({ blockId, code, language, articleId, articleC
   const handleOpenPlayground = useCallback(() => {
     const encoded = encodeCode(currentCode);
     if (encoded) {
-      router.push(`/playground?lang=${langInfo.monacoLang}&code=${encoded}`);
+      // Save session data to sessionStorage for Playground to restore
+      const sessionData = {
+        sessionId: session.sessionId,
+        messages: block?.aiMessages ?? [],
+      };
+      sessionStorage.setItem("playground-session-transfer", JSON.stringify(sessionData));
+      router.push(`/playground?lang=${langInfo.monacoLang}&code=${encoded}&restore=1`);
     }
-  }, [currentCode, langInfo.monacoLang, router]);
+  }, [currentCode, langInfo.monacoLang, router, session.sessionId, block?.aiMessages]);
 
   const handleRun = async () => {
     if (isRunning) return;
@@ -170,7 +177,7 @@ export default function CodeBlock({ blockId, code, language, articleId, articleC
               onToggleExpand={handleToggleExpand}
               onOpenPlayground={handleOpenPlayground}
             />
-            <div className="flex-1">
+            <div className="flex-1 min-h-0">
               <Editor
                 height="100%"
                 language={langInfo.monacoLang}

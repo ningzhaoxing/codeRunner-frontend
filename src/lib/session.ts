@@ -10,3 +10,19 @@ export function generateSessionId(): string {
     return `session-${Date.now()}-${Math.random().toString(36).slice(2, 11)}`;
   }
 }
+
+const VISITOR_ID_KEY = "cr_visitor_id";
+
+/**
+ * Returns a stable visitor ID for the current browser.
+ * Generated once and persisted in localStorage.
+ */
+export function getVisitorId(): string {
+  if (typeof window === "undefined") return "";
+  let id = localStorage.getItem(VISITOR_ID_KEY);
+  if (!id) {
+    id = generateSessionId();
+    localStorage.setItem(VISITOR_ID_KEY, id);
+  }
+  return id;
+}
