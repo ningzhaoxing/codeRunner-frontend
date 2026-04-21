@@ -37,6 +37,13 @@ export const ONBOARDING_STEPS: OnboardingStep[] = [
     advanceOnRoute: "/playground",
   },
   {
+    id: "feedback",
+    targetSelector: '[data-onboarding-target="feedback-link"]',
+    content: "💬 遇到问题或有建议？点击「反馈」告诉我，我会认真查看每一条",
+    position: "bottom",
+    route: "/playground",
+  },
+  {
     id: "complete",
     targetSelector: ".monaco-editor",
     content:
