@@ -2,6 +2,7 @@
 title: "Go 并发：sync.WaitGroup 与 Channel 的日常用法"
 date: "2026-04-21"
 tags: [Go, 并发]
+pinned: true
 summary: "从片段代码开始理解 Go 并发——每个代码块都是函数级示例，点开 AI 助手让它帮你补全成可运行程序。"
 ---
 
