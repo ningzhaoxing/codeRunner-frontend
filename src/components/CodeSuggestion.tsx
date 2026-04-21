@@ -68,10 +68,11 @@ export default function CodeSuggestion({ proposalId, blockId }: CodeSuggestionPr
   }, [proposal, proposalId, updateProposalStatus]);
 
   useEffect(() => {
+    if (!proposal) return;
     if (typeof window !== "undefined") {
       window.dispatchEvent(new CustomEvent("onboarding:proposal-shown"));
     }
-  }, []);
+  }, [proposal]);
 
   if (!proposal) return null;
 

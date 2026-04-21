@@ -156,7 +156,7 @@ export default function AIPanel({ blockId, blockIndex, articleId, articleContent
   }, [session.isStreaming, session.sessionId, blockId, articleId, addAIMessage]);
 
   return (
-    <div className="flex flex-col h-full bg-surface-0">
+    <div className="flex flex-col h-full bg-surface-0" data-onboarding-target="ai-chat-area">
       <div className="flex items-center justify-between px-3 py-2 border-b border-border">
         <span className="text-xs text-text-title font-medium">🤖 AI 助手</span>
         <div className="flex items-center gap-1">

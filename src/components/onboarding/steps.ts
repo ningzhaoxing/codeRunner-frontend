@@ -47,15 +47,22 @@ export const ONBOARDING_STEPS: OnboardingStep[] = [
     id: "ai-wait-proposal",
     targetSelector: '[data-onboarding-target="ai-chat-area"]',
     content:
-      "⏳ 现在先等 Agent 工作一下。它不会直接运行代码，而是会先把缺失的 package / import / main 补齐，再在聊天区里发出一张『执行提议』卡片。\n\n👉 等 proposal 出现后会自动进入下一步",
+      "⏳ 现在先等 Agent 工作一下。它不会直接运行代码，而是会先把缺失的 package / import / main 补齐，再在聊天区里发来一张『运行确认』卡片。\n\n👉 等运行确认出现后会自动进入下一步",
     position: "left",
     advanceOnEvent: "onboarding:proposal-shown",
+  },
+  {
+    id: "ai-proposal-ready",
+    targetSelector: '[data-onboarding-target="proposal-confirm-button"]',
+    content:
+      "📨 看到了吗？这就是 Agent 发来的运行确认。它已经把准备执行的代码整理好了，但不会自己直接运行，而是先把决定权交给你。\n\n👉 先认识这一步，再点下一步",
+    position: "left",
   },
   {
     id: "ai-confirm",
     targetSelector: '[data-onboarding-target="proposal-confirm-button"]',
     content:
-      "✅ 这就是关键的 HITL（Human in the Loop）步骤：Agent 先提议，你来决定是否真的执行。现在点击这个『确认运行』按钮，把补全后的代码送进沙箱运行。\n\n👉 点击确认运行后会自动进入下一步",
+      "✅ 现在由你来拍板。点击这个『确认运行』按钮，把补全后的代码送进沙箱执行。\n\n👉 点击确认运行后会自动进入下一步",
     position: "left",
     advanceOnEvent: "onboarding:proposal-confirmed",
   },
