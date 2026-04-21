@@ -66,21 +66,15 @@ export default function PlaygroundAIPanel() {
         const currentLang = usePlaygroundStore.getState().language;
         const currentSessionId = usePlaygroundStore.getState().sessionId;
 
-        // Send article_ctx on first message (no session yet)
-        const articleCtx = !currentSessionId
-          ? {
-              article_id: "",
-              article_content: "",
-              code_blocks: [{ language: currentLang, code: currentCode }],
-            }
-          : undefined;
-
-
         await chatWithAgent(
           {
             session_id: currentSessionId ?? "",
             user_message: text,
-            article_ctx: articleCtx,
+            article_ctx: {
+              article_id: "",
+              article_content: "",
+              code_blocks: [{ language: currentLang, code: currentCode }],
+            },
           },
           (event: SSEEvent) => {
             if (event.type === "session_created" && typeof event.session_id === "string") {

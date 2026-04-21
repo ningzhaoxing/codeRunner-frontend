@@ -66,19 +66,11 @@ export default function AIPanel({ blockId, articleId, articleContent, allCodeBlo
         // Get current session_id (may be null on first message)
         const currentSessionId = usePostStore.getState().session.sessionId;
 
-        // Send article_ctx on first message (no messages yet) to create session
-        const messages = usePostStore.getState().codeBlocks[blockId]?.aiMessages ?? [];
-        const isFirstMessage = messages.length <= 2; // just added user + ai placeholder
-        const articleCtx = isFirstMessage
-          ? { article_id: articleId, article_content: articleContent, code_blocks: allCodeBlocks }
-          : undefined;
-
-
         await chatWithAgent(
           {
             session_id: currentSessionId ?? "",
             user_message: text,
-            article_ctx: articleCtx,
+            article_ctx: { article_id: articleId, article_content: articleContent, code_blocks: allCodeBlocks },
           },
           (event: SSEEvent) => {
             if (event.type === "session_created" && typeof event.session_id === "string") {
