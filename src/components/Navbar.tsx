@@ -16,8 +16,8 @@ export default function Navbar() {
     <nav className="fixed top-0 left-0 right-0 z-50 bg-surface-nav border-b border-border">
       <div className="max-w-4xl mx-auto px-6 h-14 flex items-center justify-between">
         <Link href="/" className="flex items-baseline gap-2">
-          <span className="text-accent font-bold font-mono text-lg">CodeRunner</span>
-          <span className="text-text-disabled text-xs">Blog</span>
+          <span className="text-accent font-bold text-lg tracking-wide">灵码云</span>
+          <span className="text-text-disabled text-xs">交互式博客</span>
         </Link>
         <div className="flex items-center gap-6">
           <Link href="/" className={linkClass("/")}>首页</Link>

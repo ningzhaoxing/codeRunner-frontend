@@ -14,7 +14,7 @@ export const ONBOARDING_STEPS: OnboardingStep[] = [
     id: "welcome",
     targetSelector: '[data-onboarding-target="first-post"]',
     content:
-      "👋 欢迎来到 CodeRunner！先打开这篇 Go 并发博客，我带你体验最核心的能力 —— 博客代码片段直接补全并运行。点击文章标题进入 →",
+      "👋 欢迎来到灵码云！这是一种可交互的新型博客——文中代码能原地运行、补全、追问。先打开这篇 Go 并发博客，我带你跑一遍核心体验。点击文章标题进入 →",
     position: "bottom",
     route: "/",
     advanceOnRoute: "/posts/",

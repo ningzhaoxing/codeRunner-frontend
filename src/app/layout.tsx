@@ -5,8 +5,8 @@ import Footer from "@/components/Footer";
 import OnboardingProvider from "@/components/onboarding/OnboardingProvider";
 
 export const metadata: Metadata = {
-  title: "CodeRunner Blog",
-  description: "技术博客 - 代码可直接运行",
+  title: "灵码云 — 可交互的新型博客",
+  description: "灵码云是一种非传统博客：每段代码都能在文中直接运行，AI Agent 在旁边陪你读、跑、改、问。",
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

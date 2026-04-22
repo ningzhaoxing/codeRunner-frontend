@@ -8,14 +8,15 @@ export default function Home() {
     <div className="max-w-[720px] mx-auto px-6 pt-14">
       {/* Hero */}
       <section className="py-12">
-        <h1 className="text-text-title text-2xl font-semibold mb-3">Hi, I&apos;m Ning 👋</h1>
+        <h1 className="text-text-title text-2xl font-semibold mb-3">欢迎来到灵码云 👋</h1>
         <p className="text-text-secondary text-[15px] leading-relaxed mb-4">
-          这里记录我的技术思考与探索。博客中的代码块支持{" "}
-          <span className="text-accent font-medium">代码可直接运行</span>，配合 AI 助手一起学习。
+          灵码云不是传统意义上的技术博客，而是一种{" "}
+          <span className="text-accent font-medium">可交互的新型博客</span>
+          ——文章里的每一段代码都能原地运行，不用跳转、不用本地配环境。
         </p>
         <p className="text-text-secondary text-[15px] leading-relaxed">
-          内置 <span className="text-accent font-medium">AI Agent</span>{" "}
-          帮你把片段补全为可运行程序、解释报错、按需改写示例——
+          身边还有一个 <span className="text-accent font-medium">AI Agent</span>{" "}
+          帮你把片段补全成可运行程序、解释报错、按需改写示例——
           <span className="text-text-title">读、跑、改、问</span>在同一个页面完成。
         </p>
       </section>
